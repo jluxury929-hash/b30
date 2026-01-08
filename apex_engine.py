@@ -1,14 +1,14 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 ===============================================================================
-APEX PREDATOR v204.1 (OMNI-GOVERNOR - WEB-INTELLIGENCE SINGULARITY)
+APEX PREDATOR v204.2 (OMNI-GOVERNOR - DETERMINISTIC SINGULARITY)
 ===============================================================================
 STATUS: MAXIMUM THEORETICAL EXTRACTION (MTE FINALITY)
-NEW CAPABILITIES:
-1. SITE ANALYZER AI: Scrapes AI signal sites via aiohttp + TextBlob NLP.
-2. QUAD-NETWORK GOVERNANCE: Simultaneous ETH, BASE, ARB, POLY sentient strikes.
-3. ABSOLUTE VOLUME SQUEEZE: Uses 100% of wallet remainder for max loan size.
-4. L1-DATA MOAT: Dynamically adjusted buffers for each network's L1 tax.
+FIXES & HARDENING:
+1. ENV: Universal shebang for python3/python compatibility.
+2. CERTAINTY: Physical Reverse-Derivation (Balance - Moat = Max Premium).
+3. VOLUME: 100% Capital Squeeze forces maximum possible loan principal.
+4. L1-DATA MOAT: Hardened buffers to ensure zero balance-related reverts.
 ===============================================================================
 """
 
@@ -58,7 +58,7 @@ NETWORKS = {
 
 # TARGET AI SIGNAL SITES (Expandable list)
 AI_SITES = [
-    "https://api.crypto-ai-signals.com/v1/latest", # Example API endpoint
+    "https://api.crypto-ai-signals.com/v1/latest", 
     "https://top-trading-ai-blog.com/alerts"
 ]
 
@@ -94,12 +94,19 @@ class ApexOmniGovernor:
         self.providers = {}
         
         for name, config in NETWORKS.items():
-            w3 = Web3(Web3.HTTPProvider(config['rpc']))
-            self.providers[name] = w3
-            self.wallets[name] = w3.eth.account.from_key(PRIVATE_KEY)
+            try:
+                w3 = Web3(Web3.HTTPProvider(config['rpc']))
+                self.providers[name] = w3
+                if PRIVATE_KEY:
+                    self.wallets[name] = w3.eth.account.from_key(PRIVATE_KEY)
+            except Exception as e:
+                print(f"{Fore.RED}[{name}] Init Error: {e}")
 
     async def calculate_max_squeeze(self, network_name):
-        """Calculates 100% Physical Squeeze trade metrics"""
+        """
+        Calculates 100% Physical Squeeze trade metrics.
+        The only reason this returns None is insufficient balance.
+        """
         w3 = self.providers[network_name]
         addr = self.wallets[network_name].address
         config = NETWORKS[network_name]
@@ -107,39 +114,49 @@ class ApexOmniGovernor:
         balance = w3.eth.get_balance(addr)
         gas_price = w3.eth.gas_price
         
-        # Abyssal Gas Calculation
+        # Abyssal Gas Calculation: Base Fee + Priority + 20% Jitter Buffer
         priority_fee = w3.to_wei(config['priority'], 'gwei')
         execution_fee = int(gas_price * 1.2) + priority_fee
         l2_cost = 2000000 * execution_fee # Fixed gas limit for complex paths
         
-        # Stall-Proof Moat (L1 Posting)
+        # Stall-Proof Moat (L1 Posting Fees)
         moat_wei = w3.to_wei(config['moat'], 'ether')
         
+        # Final Overhead Anchor
         total_overhead = l2_cost + moat_wei + 100000 # 100k safety void
         premium_available = balance - total_overhead
         
         if premium_available < w3.to_wei(0.001, 'ether'):
+            # This is the "Insufficient Balance" trigger
             return None
         
-        # Reverse Derivation for Trade Amount
-        # trade = (premium * 10000) / 9
+        # Reverse Derivation for Trade Amount: principal = (premium * 10000) / 9
+        # This forces the largest possible loan principal based on physical ETH remainder.
         max_trade = (premium_available * 10000) // 9
-        return {"loan": max_trade, "premium": premium_available, "fee": execution_fee, "priority": priority_fee}
+        return {
+            "loan": max_trade, 
+            "premium": premium_available, 
+            "fee": execution_fee, 
+            "priority": priority_fee
+        }
 
     async def strike_network(self, network_name, token_symbol):
         """Executes a strike using the physical limit of the wallet"""
+        if network_name not in self.wallets: return
+        
         metrics = await self.calculate_max_squeeze(network_name)
-        if not metrics: return
+        if not metrics: 
+            return # Skip if balance cannot cover overhead
 
         w3 = self.providers[network_name]
         acc = self.wallets[network_name]
         
-        print(f"{Fore.CYAN}[{network_name}] Strike Detected: {token_symbol}. Squeezing {w3.from_wei(metrics['loan'], 'ether')} ETH...")
+        print(f"{Fore.CYAN}[{network_name}] Strike: {token_symbol}. Squeezing {w3.from_wei(metrics['loan'], 'ether')} ETH...")
 
-        # ArbitrageExecutor.sol Interface
+        # ArbitrageExecutor.sol v134.0 Interface
         abi = '[{"name":"executeComplexPath","type":"function","inputs":[{"name":"path","type":"string[]"},{"name":"amount","type":"uint256"}],"stateMutability":"payable"}]'
         contract = w3.eth.contract(address=EXECUTOR, abi=abi)
-        path = ["ETH", "USDC", "ETH"] # Dynamic path resolution based on token_symbol
+        path = ["ETH", "USDC", "ETH"] 
 
         try:
             tx = contract.functions.executeComplexPath(path, metrics['loan']).build_transaction({
@@ -153,30 +170,35 @@ class ApexOmniGovernor:
             })
 
             signed = w3.eth.account.sign_transaction(tx, PRIVATE_KEY)
-            tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction)
+            tx_hash = w3.eth.send_raw_transaction(signed.rawTransaction)
             print(f"{Fore.GREEN}✅ [{network_name}] STRIKE DISPATCHED: {w3.to_hex(tx_hash)}")
         except Exception as e:
-            if "insufficient funds" not in str(e).lower():
-                print(f"{Fore.RED}[{network_name}] Error: {str(e)[:50]}")
+            msg = str(e).lower()
+            if "insufficient funds" not in msg:
+                print(f"{Fore.RED}[{network_name}] Strike Aborted: {str(e)[:70]}")
 
     async def run_loop(self):
         print(f"{Fore.GOLD}{Style.BRIGHT}╔════════════════════════════════════════════════════════╗")
-        print(f"║    ⚡ APEX TITAN v204.1 | WEB-AI SINGULARITY        ║")
-        print(f"║    NETWORKS: ETH, BASE, ARB, POLY | 100% SQUEEZE    ║")
+        print(f"║    ⚡ APEX TITAN v204.2 | DETERMINISTIC SINGULARITY ║")
+        print(f"║    MODE: ABSOLUTE VOLUME | 100% CAPITAL SQUEEZE     ║")
         print(f"╚════════════════════════════════════════════════════════╝")
         
+        if not EXECUTOR or not PRIVATE_KEY:
+            print(f"{Fore.RED}CRITICAL: .env variables missing (EXECUTOR_ADDRESS or PRIVATE_KEY).")
+            return
+
         while True:
-            # 1. Analyze AI Sites
+            # 1. Analyze external AI signals
             web_signals = await self.analyzer.analyze_external_sites()
             
-            # 2. Parallel strike across all networks
+            # 2. Parallel network strikes
             tasks = []
             for network in NETWORKS.keys():
-                for signal in web_signals:
-                    tasks.append(self.strike_network(network, signal['ticker']))
-                
-                # Default high-frequency discovery if no site signals
-                if not web_signals:
+                if web_signals:
+                    for signal in web_signals:
+                        tasks.append(self.strike_network(network, signal['ticker']))
+                else:
+                    # High-frequency discovery mode
                     tasks.append(self.strike_network(network, "DISCOVERY"))
             
             await asyncio.gather(*tasks)
