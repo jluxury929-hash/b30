@@ -1,14 +1,12 @@
 /**
  * ===============================================================================
- * APEX PREDATOR v204.6 (OMNI-GOVERNOR - DETERMINISTIC SINGULARITY JS-UNIFIED)
+ * APEX PREDATOR v204.7 (OMNI-GOVERNOR - DETERMINISTIC SINGULARITY JS-UNIFIED)
  * ===============================================================================
  * STATUS: TOTAL MAXIMIZATION (MTE FINALITY)
- * CAPABILITIES UNIFIED:
- * 1. SITE ANALYZER AI: Scrapes AI signal sites via axios + sentiment NLP.
- * 2. REINFORCEMENT LEARNING: Persists trust scores via JSON to learn from reverts.
- * 3. QUAD-NETWORK SENTRY: Simultaneous monitoring of ETH, BASE, ARB, and POLY.
- * 4. ABSOLUTE CERTAINTY: Physical Reverse-Derivation (100% Squeeze).
- * 5. CLOUD STABILITY: Integrated HTTP server for port-binding health checks.
+ * FIXES:
+ * 1. ETHERS V6 FIX: Corrected JsonRpcProvider staticNetwork initialization.
+ * 2. CERTAINTY: Hardened .env validation for keys and executor.
+ * 3. QUAD-NETWORK: Simultaneous ETH, BASE, ARB, POLY connectivity.
  * ===============================================================================
  */
 
@@ -29,7 +27,7 @@ const runHealthServer = () => {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
             engine: "APEX_TITAN",
-            version: "204.6-JS",
+            version: "204.7-JS",
             keys_detected: !!(process.env.PRIVATE_KEY && process.env.EXECUTOR_ADDRESS),
             ai_active: true,
             reinforcement_learning: "ENABLED"
@@ -75,9 +73,9 @@ class AIEngine {
     updateTrust(sourceName, success) {
         let current = this.trustScores[sourceName] || 0.5;
         if (success) {
-            current = Math.min(0.99, current * 1.05); // Boost 5%
+            current = Math.min(0.99, current * 1.05); 
         } else {
-            current = Math.max(0.1, current * 0.90); // Punish 10%
+            current = Math.max(0.1, current * 0.90); 
         }
         this.trustScores[sourceName] = current;
         fs.writeFileSync(this.trustFile, JSON.stringify(this.trustScores));
@@ -116,21 +114,25 @@ class ApexOmniGovernor {
         
         for (const [name, config] of Object.entries(NETWORKS)) {
             try {
-                const provider = new ethers.JsonRpcProvider(config.rpc, {
-                    chainId: config.chainId,
+                // ethers v6 fix: chainId is 2nd arg, options is 3rd arg
+                const provider = new ethers.JsonRpcProvider(config.rpc, config.chainId, {
                     staticNetwork: true
                 });
                 this.providers[name] = provider;
-                if (PRIVATE_KEY) {
+                if (PRIVATE_KEY && PRIVATE_KEY.length >= 64) {
                     this.wallets[name] = new ethers.Wallet(PRIVATE_KEY, provider);
                 }
-            } catch (e) { console.error(`[${name}] Init Fail: ${e.message}`); }
+            } catch (e) { 
+                console.error(`[${name}] Init Fail: ${e.message}`.red); 
+            }
         }
     }
 
     async calculateMaxStrike(networkName) {
         const provider = this.providers[networkName];
         const wallet = this.wallets[networkName];
+        if (!wallet) return null;
+
         const config = NETWORKS[networkName];
 
         try {
@@ -145,7 +147,7 @@ class ApexOmniGovernor {
             
             const overhead = (2000000n * executionFee) + 
                              ethers.parseEther(config.moat) + 
-                             100000n; // 100k safety void
+                             100000n; 
 
             if (balance < overhead) {
                 console.log(`[${networkName}]`.yellow + ` SKIP: Needs +${ethers.formatEther(overhead - balance)} ETH`);
@@ -153,7 +155,6 @@ class ApexOmniGovernor {
             }
 
             const premium = balance - overhead;
-            // principal = (premium * 10000) / 9
             const loan = (premium * 10000n) / 9n;
 
             return { loan, premium, fee: executionFee, priority: priorityFee };
@@ -189,12 +190,9 @@ class ApexOmniGovernor {
                 }
             );
 
-            // Predictive Emulation
             await provider.call(txData);
-
             const txResponse = await wallet.sendTransaction(txData);
             console.log(`✅ [${networkName}]`.gold + ` SUCCESS: ${txResponse.hash}`);
-
             this.verifyAndLearn(networkName, txResponse, source);
         } catch (e) {
             if (!e.message.toLowerCase().includes("insufficient funds")) {
@@ -214,7 +212,7 @@ class ApexOmniGovernor {
 
     async run() {
         console.log("╔════════════════════════════════════════════════════════╗".gold);
-        console.log("║    ⚡ APEX TITAN v204.6 | JS-SINGULARITY ACTIVE     ║".gold);
+        console.log("║    ⚡ APEX TITAN v204.7 | JS-SINGULARITY ACTIVE     ║".gold);
         console.log("║    MODE: ABSOLUTE VOLUME | REINFORCEMENT AI ACTIVE  ║".gold);
         console.log("╚════════════════════════════════════════════════════════╝".gold);
 
