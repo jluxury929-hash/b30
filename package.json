@@ -2,9 +2,9 @@
 "name": "titan-flash-engine",
 "version": "204.6.0",
 "description": "AI-Driven Deterministic Flash Loan Arbitrage Bot (JS Unified)",
-"main": "apex_engine.js",
+"main": "server.js",
 "scripts": {
-"start": "node apex_engine.js",
+"start": "node server.js",
 "setup": "npm install"
 },
 "dependencies": {
