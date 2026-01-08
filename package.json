@@ -1,12 +1,17 @@
 {
   "name": "titan-flash-engine",
-  "version": "204.2.0",
+  "version": "201.0.0",
+  "description": "AI-Driven Deterministic Flash Loan Arbitrage Bot",
+  "main": "titan_backend.py",
   "scripts": {
-    "start": "python3 apex_engine.py"
+    "start": "python3 titan_backend.py",
+    "setup": "pip install web3 numpy python-dotenv telethon textblob colorama aiohttp",
+    "download-models": "python3 -m textblob.download_corpora"
   },
   "dependencies": {
     "dotenv": "^16.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }
-
-If your system still says `python3: not found`, simply change `"python3 apex_engine.py"` to `"python apex_engine.py"` in the `start` script. The code in the **Canvas** is now perfectly deterministic; if you have **0.008+ ETH**, it will strike.
