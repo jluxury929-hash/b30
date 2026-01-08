@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 ===============================================================================
-APEX PREDATOR v204.0 (OMNI-GOVERNOR - WEB-INTELLIGENCE SINGULARITY)
+APEX PREDATOR v204.1 (OMNI-GOVERNOR - WEB-INTELLIGENCE SINGULARITY)
 ===============================================================================
 STATUS: MAXIMUM THEORETICAL EXTRACTION (MTE FINALITY)
 NEW CAPABILITIES:
@@ -17,6 +17,7 @@ import asyncio
 import aiohttp
 import json
 import sys
+import re
 from web3 import Web3
 from textblob import TextBlob
 from dotenv import load_dotenv
@@ -160,7 +161,7 @@ class ApexOmniGovernor:
 
     async def run_loop(self):
         print(f"{Fore.GOLD}{Style.BRIGHT}╔════════════════════════════════════════════════════════╗")
-        print(f"║    ⚡ APEX TITAN v204.0 | WEB-AI SINGULARITY        ║")
+        print(f"║    ⚡ APEX TITAN v204.1 | WEB-AI SINGULARITY        ║")
         print(f"║    NETWORKS: ETH, BASE, ARB, POLY | 100% SQUEEZE    ║")
         print(f"╚════════════════════════════════════════════════════════╝")
         
@@ -182,7 +183,6 @@ class ApexOmniGovernor:
             await asyncio.sleep(0.5)
 
 if __name__ == "__main__":
-    import re
     bot = ApexOmniGovernor()
     try:
         asyncio.run(bot.run_loop())
